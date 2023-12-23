@@ -10,5 +10,5 @@ const int pauseConst = 500;        // ms
 const byte driftStep = 10;         // pwm units
 
 // PWM Pin definitions
-const int cwPin = 5;
-const int ccwPin = 6;
+const int cwPin = 5;  // L293D pin 2
+const int ccwPin = 6; // L293D pin 7
