@@ -9,7 +9,7 @@
 
 #define TICK_LED 13
 
-Motor sovMotor(CW, 100, 5000);
+Motor sovMotor(CW, 100, 10);
 systemState currentState = {POWER_UP, START_UP, STOPPED};
 
 void setup()

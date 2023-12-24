@@ -57,8 +57,7 @@ unsigned long Motor::travelLimit() const { return trvlLimit; }
 void Motor::start()
 {
     int pwm = int(255 * float(currentSpeed / 100.0));
-    Serial.print("Writing speed and direction: ");
-    Serial.println(pwm);
+    Serial.println("Writing speed and direction: Current Speed: " + String(currentSpeed));
     analogWrite(motorDir, pwm);
 }
 

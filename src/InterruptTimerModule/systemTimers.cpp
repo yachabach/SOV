@@ -41,11 +41,14 @@ bool IntervalManager::intervalExpired(int intervalIndex)
 {
     TimeInterval &interval = getInterval(intervalIndex);
     if (interval.startTime == 0 && interval.autoReset)
+        interval.startTime = millis();
+    else if ((millis() - interval.startTime >= interval.interval) && (interval.startTime != 0))
     {
         interval.startTime = millis();
-        return false;
+        return true;
     }
-    return (millis() - interval.startTime >= interval.interval);
+
+    return false;
 }
 
 unsigned long IntervalManager::elapsedTime(unsigned long start, unsigned long end)

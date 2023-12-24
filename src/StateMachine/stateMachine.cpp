@@ -13,12 +13,17 @@ systemState getSystemState(event userEvent, systemState sys)
 // Array of event reactions
 stateTransition transitions[]{
     // Cruise transitions
-    {SHORT_USER_PUSH, STOPPED, cruise, RESUMING},
-    {TRANSITION_COMPLETE, RESUMING, accelerate, CRUISING},
-    {TRANSITION_COMPLETE, CRUISING, run, CRUISING},
-    {AT_HOME, CRUISING, run, REVERSING},
-    {LIMIT_REACHED, REVERSING, decelerate, PAUSED},
-    {TRANSITION_COMPLETE, PAUSED, reverseMotor, RESUMING},
+    // {SHORT_USER_PUSH, STOPPED, cruise, RESUMING},
+    // {TRANSITION_COMPLETE, RESUMING, accelerate, CRUISING},
+    // {TRANSITION_COMPLETE, CRUISING, run, CRUISING},
+    // {AT_HOME, CRUISING, run, REVERSING},
+    // {LIMIT_REACHED, REVERSING, decelerate, PAUSED},
+    // {TRANSITION_COMPLETE, PAUSED, reverseMotor, RESUMING},
+
+    {SHORT_USER_PUSH, STOPPED, step_cruise, CRUISING},
+    {TRANSITION_COMPLETE, CRUISING, step_run, CRUISING},
+    {LIMIT_REACHED, CRUISING, pause, PAUSED},
+    {LIMIT_REACHED, PAUSED, step_run, CRUISING},
 
     // Cruise Error
     {LIMIT_REACHED, CRUISING, decelerate, LOST},

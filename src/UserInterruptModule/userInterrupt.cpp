@@ -42,7 +42,7 @@ event buttonStatus()
   event nextEvent = NO_EVENT;
   if (buttonPressTime && (buttonReleaseTime >= buttonPressTime))
   {
-    Serial.println("In button event; buttonPressTime: " + String(buttonPressTime) + "; release: " + String(buttonReleaseTime));
+    // Serial.println("In button event; buttonPressTime: " + String(buttonPressTime) + "; release: " + String(buttonReleaseTime));
     if (uiTi->elapsedTime(buttonPressTime, buttonReleaseTime) > BUTTON_PUSH_INTERVAL)
       nextEvent = LONG_USER_PUSH;
     else

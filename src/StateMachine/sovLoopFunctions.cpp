@@ -30,6 +30,22 @@ systemState cruise(Motor &motor, systemState sys)
             .endState = sys.endState};
 }
 
+systemState step_cruise(Motor &motor, systemState sys)
+{
+    Serial.println("In step_cruise setup...");
+    homeTrigger = false;
+    motor.setDesiredSpeed(FULL_SPEED);
+    motor.setCurrentSpeed(FULL_SPEED);
+    travelLimit = ti->makeInterval({motor.travelLimit(), true});
+    pauseLimit = ti->makeInterval({1000, true});
+
+    motor.start();
+
+    return {.lastEvent = TRANSITION_COMPLETE,
+            .currentState = sys.endState,
+            .endState = sys.endState};
+}
+
 systemState accelerate(Motor &motor, systemState sys)
 {
     if (ti->intervalExpired(speedAdjust))
@@ -63,10 +79,14 @@ systemState run(Motor &motor, systemState sys)
     }
     else
     {
+        Serial.println("Travel Limit: " + String(ti->getInterval(travelLimit).interval));
         if (ti->intervalExpired(travelLimit))
         {
             homeTrigger = false;
+            int travelSecs = ti->getInterval(travelLimit).startTime;
+            Serial.println("Travel seconds: " + String(travelSecs));
             ti->getInterval(travelLimit).startTime = 0;
+
             return {.lastEvent = LIMIT_REACHED,
                     .currentState = sys.endState,
                     .endState = sys.endState};
@@ -89,6 +109,39 @@ systemState decelerate(Motor &motor, systemState sys)
                     .endState = sys.endState};
         }
     }
+    return {.lastEvent = NO_EVENT,
+            .currentState = sys.currentState,
+            .endState = sys.endState};
+}
+
+systemState step_run(Motor &motor, systemState sys)
+{
+
+    if (ti->intervalExpired(travelLimit))
+    {
+        motor.stop();
+        ti->getInterval(travelLimit).startTime = 0;
+        return {.lastEvent = LIMIT_REACHED,
+                .currentState = sys.endState,
+                .endState = sys.endState};
+    }
+
+    return {.lastEvent = NO_EVENT,
+            .currentState = sys.currentState,
+            .endState = sys.endState};
+}
+
+systemState pause(Motor &motor, systemState sys)
+{
+
+    if (ti->intervalExpired(pauseLimit))
+    {
+        motor.start();
+        return {.lastEvent = LIMIT_REACHED,
+                .currentState = sys.endState,
+                .endState = sys.endState};
+    }
+
     return {.lastEvent = NO_EVENT,
             .currentState = sys.currentState,
             .endState = sys.endState};
