@@ -20,9 +20,8 @@ systemState cruise(Motor &motor, systemState sys)
     Serial.println("In cruise setup...");
     motor.setDesiredSpeed(CRUISE_SPEED);
     homeTrigger = false;
-    Serial.println("Motor travel limit: " + String(motor.travelLimit()));
     if (!travelLimit)
-        travelLimit = ti->makeInterval({motor.travelLimit(), false});
+        travelLimit = ti->makeInterval({motor.getTrvlLimit(), false});
     motor.setReverse();
 
     return {.lastEvent = TRANSITION_COMPLETE,
@@ -36,7 +35,7 @@ systemState step_cruise(Motor &motor, systemState sys)
     homeTrigger = false;
     motor.setDesiredSpeed(FULL_SPEED);
     motor.setCurrentSpeed(FULL_SPEED);
-    travelLimit = ti->makeInterval({motor.travelLimit(), true});
+    travelLimit = ti->makeInterval({motor.getTrvlLimit(), true});
     pauseLimit = ti->makeInterval({1000, true});
 
     motor.start();

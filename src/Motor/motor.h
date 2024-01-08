@@ -1,16 +1,7 @@
-// Motor Header File
-
+// Motor Parent Class Header File
 #pragma once
 
-// #include <arduino.h>
-#include "constants.h"
-
-// Possible Directions - ^3 toggles between the two
-enum direction
-{
-    CW = cwPin,
-    CCW = ccwPin
-};
+#include "constants.h" //Already includes Arduino.h
 
 class Motor
 {
@@ -25,25 +16,28 @@ public:
     Motor(direction motorDir, byte desiredSpeed, unsigned long trvlLimit);
     ~Motor();
 
-    void setDirection(direction);
-    direction travelDirection(void) const;
-
-    void setTravelLimit(unsigned long);
-    unsigned long travelLimit(void) const;
+    void setMotorDir(direction);
+    direction getMotorDir(void);
 
     void setCurrentSpeed(byte);
-    byte getCurrentSpeed(void);
+    byte getCurrentSpeed();
+
     void setDesiredSpeed(byte);
-    byte getDesiredSpeed(void);
-    byte accelerate(void);
-    byte decelerate(void);
-    byte driftUpTo(byte);
-    byte driftDownTo(byte);
+    byte getDesiredSpeed();
 
-    void start();
-    void start(byte);
+    void setTrvlLimit(unsigned long);
+    unsigned long getTrvlLimit(void);
 
-    void stop();
+    virtual void setDirection(direction) = 0;
+
+    virtual byte accelerate();
+    virtual byte decelerate();
+    virtual byte driftUpTo(byte);
+    virtual byte driftDownTo(byte);
+
+    virtual void start() = 0;
+    virtual void start(byte) = 0;
+    virtual void stop() = 0;
 
     direction setReverse(void);
 };

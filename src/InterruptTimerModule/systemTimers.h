@@ -18,7 +18,7 @@ class IntervalManager
 {
 private:
     IntervalManager();
-    static IntervalManager *instance;
+    static IntervalManager *instance; // Singleton instance
 
     TimeInterval intervalList[10];
     byte listSize;

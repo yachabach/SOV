@@ -1,5 +1,4 @@
-#ifndef STATE_MACHINE__H
-#define STATE_MACHINE__H
+#pragma once
 
 #include "sovLoopFunctions.h"
 
@@ -13,5 +12,3 @@ extern systemState currentState;
 
 systemState getSystemState(event, systemState);
 systemState eventHandler(systemState, Motor &);
-
-#endif // STATE_MACHINE_H
