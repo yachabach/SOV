@@ -13,31 +13,31 @@ systemState getSystemState(event userEvent, systemState sys)
 // Array of event reactions
 stateTransition transitions[]{
     // Cruise transitions
-    // {SHORT_USER_PUSH, STOPPED, cruise, RESUMING},
-    // {TRANSITION_COMPLETE, RESUMING, accelerate, CRUISING},
-    // {TRANSITION_COMPLETE, CRUISING, run, CRUISING},
-    // {AT_HOME, CRUISING, run, REVERSING},
-    // {LIMIT_REACHED, REVERSING, decelerate, PAUSED},
-    // {TRANSITION_COMPLETE, PAUSED, reverseMotor, RESUMING},
+    {SHORT_USER_PUSH, STOPPED, cruise, CRUISING},
+    {TRANSITION_COMPLETE, CRUISING, run, CRUISING},
+    {AT_HOME, CRUISING, run, CRUISING},
+    {LIMIT_REACHED, CRUISING, stop, REVERSING},
+    {TRANSITION_COMPLETE, REVERSING, pause, PAUSED},
+    {LIMIT_REACHED, PAUSED, reverse, CRUISING},
 
-    {SHORT_USER_PUSH, STOPPED, step_cruise, CRUISING},
-    {TRANSITION_COMPLETE, CRUISING, step_run, CRUISING},
-    {LIMIT_REACHED, CRUISING, pause, PAUSED},
-    {LIMIT_REACHED, PAUSED, step_run, CRUISING},
+    // {SHORT_USER_PUSH, STOPPED, cruise, CRUISING},
+    // {TRANSITION_COMPLETE, CRUISING, step_run, CRUISING},
+    // {LIMIT_REACHED, CRUISING, pause, PAUSED},
+    // {LIMIT_REACHED, PAUSED, step_run, CRUISING},
 
     // Cruise Error
-    {LIMIT_REACHED, CRUISING, decelerate, LOST},
+    {LIMIT_REACHED, CRUISING, stop, LOST},
     {TRANSITION_COMPLETE, LOST, idle, STOPPED},
 
     // Stop Logic
-    {SHORT_USER_PUSH, ANY, decelerate, STOPPED},
+    {SHORT_USER_PUSH, ANY, stop, STOPPED},
     {TRANSITION_COMPLETE, STOPPED, idle, STOPPED},
 
     // Seek Home Transitions
     {LONG_USER_PUSH, STOPPED, seek_home, SEEKING_HOME},
-    {TRANSITION_COMPLETE, SEEKING_HOME, accelerate, RUNNING_HOME},
+    {TRANSITION_COMPLETE, SEEKING_HOME, cruise, RUNNING_HOME},
     {TRANSITION_COMPLETE, RUNNING_HOME, run, SEEKING_HOME},
-    {AT_HOME, SEEKING_HOME, decelerate, STOPPED},
+    {AT_HOME, SEEKING_HOME, stop, STOPPED},
 
     // Startup Logic
     {POWER_UP, START_UP, startUp, STOPPED},
@@ -70,8 +70,7 @@ systemState eventHandler(systemState sysState, Motor &motor)
     else
     {
       newState.lastEvent = NO_EVENT;
-      currentStateFunction = startUp;
-      return newState;
+      Serial.println("Event and State not found: " + String(newState.lastEvent) + " : " + String(newState.currentState));
     }
   }
   newState = currentStateFunction(motor, newState);

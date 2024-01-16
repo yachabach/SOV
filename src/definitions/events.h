@@ -15,5 +15,4 @@ enum event
     BEGIN_CRUISE,
     RESUME_CRUISE,
     CRUISE_LIMIT_REACHED,
-    GRACEFUL_STOP
 };

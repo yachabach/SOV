@@ -1,25 +1,45 @@
 #pragma once
 
 #include "motor.h"
+#include "brushedMotorConst.h"
+// #include "./InterruptTimerModule/systemTimers.h"
 
 class BrushedMotor : public Motor
 {
+private:
+    // Timers
+    int travelIntervalTimer; // for travel limit
+    int dutyTimer;
+    unsigned long onDutyTime;  // Intermitent run time
+    unsigned long offDutyTime; // Intermitent stop time
+    void setTimersAndIntervals();
+
+    // Arduino Interface
+    byte dirPin; // Direction dependent
+    void setControllerDirection() override;
+    void setPWMPins(); // Set output pins for PWM signals
+
+    // Intermitent run functionality
+    bool onDuty = false;
+    int cycleDuration;
+    int runDutyCycle = 100; // 100 or < 30
+    void cycleStart();
+    void dcStop();
 
 public:
-    BrushedMotor(direction motorDir, byte currentSpeed, byte desiredSpeed, unsigned long trvlLimit);
-    BrushedMotor(direction motorDir, byte desiredSpeed, unsigned long trvlLimit);
+    BrushedMotor(
+        direction motorDir = CW,
+        int Speed = 0,
+        unsigned long trvlLimit = 0);
     ~BrushedMotor();
 
-    void setDirection(direction) override;
-
     void setTravelLimit(unsigned long);
-
-    byte accelerate(void) override;
-    byte decelerate(void) override;
-    byte driftUpTo(byte) override;
-    byte driftDownTo(byte) override;
+    void resetTravelMon() override;
+    void setDutyCycle(int);
+    int getDutyCycle();
 
     void start() override;
-    void start(byte) override;
+    void run() override;
     void stop() override;
+    void resetTravelTimer();
 };

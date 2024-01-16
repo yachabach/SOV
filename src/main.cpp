@@ -7,13 +7,12 @@
 
 #define TICK_LED 13
 
-BrushedMotor sovMotor(CW, 100, 10);
+BrushedMotor sovMotor(CW, 100, 2000);
 systemState currentState = {POWER_UP, START_UP, STOPPED};
 
 void setup()
 {
-  Serial.begin(9600);
-  Serial.setTimeout(2000);
+  setupUserInterface();
   appClockFreq = startInterruptTimer(10, statusPin);
   setupButtonInterrupt();
   setMarkerInterrupt();
@@ -28,7 +27,5 @@ void loop()
       getSystemState(buttonStatus(), currentState), sovMotor);
 
   displayState(currentState);
-  checkUserInput();
-
-  // put your main code here, to run repeatedly:
+  checkUserInput(sovMotor);
 }

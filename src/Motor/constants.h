@@ -3,18 +3,16 @@
 
 #include <Arduino.h>
 
-// Motor speed control
-const int driftTimeConstant = 250; // ms
-const int pauseConst = 500;        // ms
-const byte driftStep = 100;        // pwm units
+// Motor speed control***************
+const byte SPEED_PIN = A0;
+const byte DC_PIN = A1;
 
-// PWM Pin definitions
-const int cwPin = 5;  // L293D pin 2
-const int ccwPin = 6; // L293D pin 7
+// Time stopped before reverse starts
+const int PAUSE_CONST = 500; // ms.
 
 // Possible Directions - ^3 toggles between the two
 enum direction
 {
-    CW = cwPin,
-    CCW = ccwPin
+    CW = 1,
+    CCW = -1
 };

@@ -41,6 +41,11 @@ int IntervalManager::makeInterval(TimeInterval newInterval)
     return -1;
 }
 
+void IntervalManager::updateInterval(int i, TimeInterval t)
+{
+    intervalList[i] = t;
+}
+
 TimeInterval &IntervalManager::getInterval(int idx)
 {
     return intervalList[idx];
@@ -49,20 +54,28 @@ TimeInterval &IntervalManager::getInterval(int idx)
 bool IntervalManager::intervalExpired(int intervalIndex)
 {
     TimeInterval &interval = getInterval(intervalIndex);
-    if (interval.startTime == 0 && interval.autoReset)
-        interval.startTime = millis();
-    else if ((millis() - interval.startTime >= interval.interval) && (interval.startTime != 0))
+
+    // Check for disabled timer
+    if (!interval.interval)
+        return false;
+
+    // Reset timer only if expired and autoReset is true
+    if (millis() - interval.startTime >= interval.interval)
     {
-        interval.startTime = millis();
+        interval.startTime = interval.autoReset ? millis() : 0;
         return true;
     }
-
     return false;
+}
+
+void IntervalManager::resetInterval(int i)
+{
+    TimeInterval &interval = getInterval(i);
+    interval.startTime = millis();
 }
 
 unsigned long IntervalManager::elapsedTime(unsigned long start, unsigned long end)
 {
-    Serial.println("Elapsed Time: " + String(end - start));
     return end - start;
 }
 

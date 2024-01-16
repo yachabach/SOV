@@ -2,42 +2,16 @@
 
 IntervalManager *ti = IntervalManager::getInstance();
 
-int speedAdjust = ti->makeInterval(TimeInterval(driftTimeConstant));
-int travelLimit = 0;
-int pauseLimit = 0;
-bool homeTrigger;
+int pauseLimit = ti->makeInterval(TimeInterval(PAUSE_CONST, false));
 
 systemState startUp(Motor &motor, systemState sys)
 {
-    Serial.println("Running Startup...");
-    return {.lastEvent = sys.lastEvent,
-            .currentState = sys.endState,
-            .endState = sys.endState};
+    return {sys.lastEvent, sys.endState, sys.endState};
 };
 
 systemState cruise(Motor &motor, systemState sys)
 {
-    Serial.println("In cruise setup...");
-    motor.setDesiredSpeed(CRUISE_SPEED);
-    homeTrigger = false;
-    if (!travelLimit)
-        travelLimit = ti->makeInterval({motor.getTrvlLimit(), false});
-    motor.setReverse();
-
-    return {.lastEvent = TRANSITION_COMPLETE,
-            .currentState = sys.endState,
-            .endState = sys.endState};
-}
-
-systemState step_cruise(Motor &motor, systemState sys)
-{
-    Serial.println("In step_cruise setup...");
-    homeTrigger = false;
-    motor.setDesiredSpeed(FULL_SPEED);
-    motor.setCurrentSpeed(FULL_SPEED);
-    travelLimit = ti->makeInterval({motor.getTrvlLimit(), true});
-    pauseLimit = ti->makeInterval({1000, true});
-
+    motor.setMotorSpeed(FULL_SPEED);
     motor.start();
 
     return {.lastEvent = TRANSITION_COMPLETE,
@@ -45,128 +19,70 @@ systemState step_cruise(Motor &motor, systemState sys)
             .endState = sys.endState};
 }
 
-systemState accelerate(Motor &motor, systemState sys)
-{
-    if (ti->intervalExpired(speedAdjust))
-    {
-        Serial.println("In accelerate...adjusting speed");
-        if (motor.accelerate() == motor.getDesiredSpeed())
-        {
-            return {.lastEvent = TRANSITION_COMPLETE,
-                    .currentState = sys.endState,
-                    .endState = sys.endState};
-        }
-    }
-    return {.lastEvent = NO_EVENT,
-            .currentState = sys.currentState,
-            .endState = sys.endState};
-}
-
 systemState run(Motor &motor, systemState sys)
 {
-    if (!homeTrigger)
-    {
-        if (home())
-        {
-            Serial.println("Marker detected - resetting start time");
-            homeTrigger = true;
-            ti->getInterval(travelLimit).startTime = millis();
-            return {.lastEvent = AT_HOME,
-                    .currentState = sys.endState,
-                    .endState = sys.endState};
-        }
-    }
-    else
-    {
-        Serial.println("Travel Limit: " + String(ti->getInterval(travelLimit).interval));
-        if (ti->intervalExpired(travelLimit))
-        {
-            homeTrigger = false;
-            int travelSecs = ti->getInterval(travelLimit).startTime;
-            Serial.println("Travel seconds: " + String(travelSecs));
-            ti->getInterval(travelLimit).startTime = 0;
+    systemState newState = sys;
+    newState.lastEvent = NO_EVENT;
 
-            return {.lastEvent = LIMIT_REACHED,
-                    .currentState = sys.endState,
-                    .endState = sys.endState};
-        }
+    if (home())
+    {
+        Serial.println("Marker detected - resetting start time");
+        motor.resetTravelMon();
+        newState.lastEvent = AT_HOME;
+        newState.currentState = sys.endState;
     }
 
-    return {.lastEvent = NO_EVENT,
-            .currentState = sys.currentState,
-            .endState = sys.endState};
+    motor.run();
+
+    if (motor.atTravelLimit())
+    {
+        Serial.println("Found travel limit.");
+        motor.setTravelLimitFlag(false);
+        newState.lastEvent = LIMIT_REACHED;
+        newState.currentState = sys.endState;
+    }
+
+    return newState;
 }
 
-systemState decelerate(Motor &motor, systemState sys)
+systemState stop(Motor &motor, systemState sys)
 {
-    if (ti->intervalExpired(speedAdjust))
-    {
-        if (motor.decelerate() == 0)
-        {
-            return {.lastEvent = TRANSITION_COMPLETE,
-                    .currentState = sys.endState,
-                    .endState = sys.endState};
-        }
-    }
-    return {.lastEvent = NO_EVENT,
-            .currentState = sys.currentState,
-            .endState = sys.endState};
-}
+    motor.stop();
+    ti->resetInterval(pauseLimit);
 
-systemState step_run(Motor &motor, systemState sys)
-{
-
-    if (ti->intervalExpired(travelLimit))
-    {
-        motor.stop();
-        ti->getInterval(travelLimit).startTime = 0;
-        return {.lastEvent = LIMIT_REACHED,
-                .currentState = sys.endState,
-                .endState = sys.endState};
-    }
-
-    return {.lastEvent = NO_EVENT,
-            .currentState = sys.currentState,
-            .endState = sys.endState};
+    return {
+        .lastEvent = TRANSITION_COMPLETE,
+        .currentState = sys.endState,
+        .endState = sys.endState};
 }
 
 systemState pause(Motor &motor, systemState sys)
 {
+    systemState newState = sys;
+    newState.lastEvent = NO_EVENT;
 
     if (ti->intervalExpired(pauseLimit))
     {
-        motor.start();
-        return {.lastEvent = LIMIT_REACHED,
-                .currentState = sys.endState,
-                .endState = sys.endState};
+        newState.lastEvent = LIMIT_REACHED;
+        newState.currentState = sys.endState;
     }
 
-    return {.lastEvent = NO_EVENT,
-            .currentState = sys.currentState,
-            .endState = sys.endState};
+    return newState;
 }
 
-systemState reverseMotor(Motor &motor, systemState sys)
+systemState reverse(Motor &motor, systemState sys)
 {
-    if (!pauseLimit)
-        pauseLimit = ti->makeInterval(pauseConst);
-    motor.setReverse();
-    if (ti->intervalExpired(pauseLimit))
-    {
-        return {
-            .lastEvent = TRANSITION_COMPLETE,
+    motor.reverse();
+
+    return {.lastEvent = TRANSITION_COMPLETE,
             .currentState = sys.endState,
-            .endState = sys.endState};
-    }
-    return {.lastEvent = NO_EVENT,
-            .currentState = sys.currentState,
             .endState = sys.endState};
 };
 
 systemState seek_home(Motor &motor, systemState sys)
 {
-    motor.setDesiredSpeed(FULL_SPEED);
-    motor.setReverse();
+    motor.setMotorSpeed(FULL_SPEED);
+    motor.reverse();
 
     return {.lastEvent = TRANSITION_COMPLETE,
             .currentState = sys.endState,

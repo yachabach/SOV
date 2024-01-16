@@ -1,3 +1,7 @@
-#include <Arduino.h>
+#pragma once
 
-void checkUserInput(void);
+#include <Arduino.h>
+#include "./Motor/motor.h"
+
+void setupUserInterface();
+void checkUserInput(Motor &);

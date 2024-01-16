@@ -1,43 +1,34 @@
 #include "motor.h"
 
-Motor::Motor(direction dir, byte speed, byte desSpeed, unsigned long limit)
-    : motorDir(dir), currentSpeed(speed), desiredSpeed(desSpeed), trvlLimit(limit){
-                                                                      // pinMode(cwPin, OUTPUT);
-                                                                      // pinMode(ccwPin, OUTPUT);
-                                                                  };
-
-Motor::Motor(direction dir, byte desSpeed, unsigned long limit)
-    : motorDir(dir), currentSpeed(0), desiredSpeed(desSpeed), trvlLimit(limit){
-                                                                  // pinMode(cwPin, OUTPUT);
-                                                                  // pinMode(ccwPin, OUTPUT);
-                                                              };
+Motor::Motor(
+    direction dir,
+    byte speed,
+    unsigned long limit) : motorDir(dir),
+                           motorSpeed(speed),
+                           trvlLimit(limit)
+{
+    ti = IntervalManager::getInstance();
+};
 
 Motor::~Motor(){};
 
 void Motor::setMotorDir(direction newDirection) { motorDir = newDirection; };
 direction Motor::getMotorDir(void) { return motorDir; };
 
-void Motor::setCurrentSpeed(byte newSpeed) { currentSpeed = newSpeed; }
-byte Motor::getCurrentSpeed() { return currentSpeed; }
-
-void Motor::setDesiredSpeed(byte newSpeed) { desiredSpeed = newSpeed; }
-byte Motor::getDesiredSpeed() { return desiredSpeed; }
+void Motor::setMotorSpeed(int newSpeed) { motorSpeed = newSpeed; }
+int Motor::getMotorSpeed() { return motorSpeed; }
 
 void Motor::setTrvlLimit(unsigned long newLimit) { trvlLimit = newLimit; };
 unsigned long Motor::getTrvlLimit() { return trvlLimit; };
 
-byte Motor::accelerate() { return 0; }
-byte Motor::decelerate() { return 0; }
-byte Motor::driftUpTo(byte) { return 0; }
-byte Motor::driftDownTo(byte) { return 0; }
-
-void Motor::start() {}
-void Motor::start(byte speed) {}
-void Motor::stop() {}
-
-direction Motor::setReverse()
+void Motor::start(int speed)
 {
-    direction newDir = motorDir == CW ? CCW : CW;
-    setMotorDir(newDir);
-    return newDir;
+    setMotorSpeed(speed);
+    setMotorDir(speed < 0 ? CCW : CW);
+    start();
 }
+
+void Motor::reverse() { start(getMotorSpeed() * -1); }
+
+bool Motor::atTravelLimit() { return travelLimitFlag; }
+void Motor::setTravelLimitFlag(bool b) { travelLimitFlag = b; }

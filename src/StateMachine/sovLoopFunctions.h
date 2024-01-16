@@ -11,13 +11,10 @@ extern int travelLimit;
 // loop functions
 systemState startUp(Motor &, systemState);
 systemState cruise(Motor &, systemState);
-systemState step_cruise(Motor &, systemState);
-systemState step_run(Motor &, systemState);
 systemState pause(Motor &, systemState);
-systemState accelerate(Motor &, systemState);
 systemState run(Motor &, systemState);
-systemState decelerate(Motor &, systemState);
-systemState reverseMotor(Motor &, systemState);
+systemState stop(Motor &, systemState);
+systemState reverse(Motor &, systemState);
 systemState full_speed(Motor &);
 systemState seek_home(Motor &, systemState);
 systemState idle(Motor &, systemState);

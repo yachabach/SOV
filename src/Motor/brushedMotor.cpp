@@ -1,64 +1,113 @@
 #include "brushedMotor.h"
 
-BrushedMotor::BrushedMotor(direction dir, byte speed, byte desSpeed, unsigned long limit)
-    : Motor(dir, speed, desSpeed, limit)
+BrushedMotor::BrushedMotor(
+    direction dir,
+    int speed,
+    unsigned long limit) : Motor(dir, speed, limit)
+{
+    setPWMPins();
+    setTimersAndIntervals();
+}
+
+BrushedMotor::~BrushedMotor() {}
+
+void BrushedMotor::setPWMPins()
 {
     pinMode(cwPin, OUTPUT);
     pinMode(ccwPin, OUTPUT);
 };
 
-BrushedMotor::BrushedMotor(direction dir, byte desSpeed, unsigned long limit)
-    : Motor(dir, desSpeed, limit)
+void BrushedMotor::setTimersAndIntervals()
 {
-    pinMode(cwPin, OUTPUT);
-    pinMode(ccwPin, OUTPUT);
-};
-
-BrushedMotor::~BrushedMotor(){};
-
-void BrushedMotor::setDirection(direction newDir)
-{
-    setMotorDir(newDir);
-    analogWrite(getMotorDir() ^ 3, 0);
+    travelIntervalTimer = ti->makeInterval(TimeInterval(getTrvlLimit(), false));
+    dutyTimer = ti->makeInterval(TimeInterval({0, false}));
+    cycleDuration = MIN_CYCLE_DURATION;
 }
 
-void BrushedMotor::setTravelLimit(unsigned long newLimit) { setTrvlLimit(newLimit >= 0 ? newLimit : 0); }
-
-byte BrushedMotor::accelerate() { return driftUpTo(getDesiredSpeed()); }
-byte BrushedMotor::decelerate() { return driftDownTo(0); }
-
-byte BrushedMotor::driftUpTo(byte limitSpeed)
+void BrushedMotor::setControllerDirection()
 {
-    setCurrentSpeed((getCurrentSpeed() + driftStep >= limitSpeed) ? limitSpeed : getCurrentSpeed() + driftStep);
-    Serial.println("Motor is drifting up to: " + String(getCurrentSpeed()));
-    start();
-    return getCurrentSpeed();
+    dirPin = (getMotorDir() == CW) ? cwPin : ccwPin;
+    byte lowPin = (dirPin == cwPin) ? ccwPin : cwPin;
+    digitalWrite(lowPin, 0);
 }
 
-byte BrushedMotor::driftDownTo(byte limitSpeed)
+void BrushedMotor::setTravelLimit(unsigned long newLimit)
 {
-    setCurrentSpeed((getCurrentSpeed() - driftStep <= limitSpeed) ? limitSpeed : getCurrentSpeed() - driftStep);
-    Serial.println("Motor is drifting down to: " + String(getCurrentSpeed()));
-    start();
-    return getCurrentSpeed();
+    setTrvlLimit((newLimit >= 0) ? newLimit : 0);
+    ti->updateInterval(travelIntervalTimer, TimeInterval(getTrvlLimit()));
 }
+
+void BrushedMotor::resetTravelMon()
+{
+    setTravelLimitFlag(false);
+    resetTravelTimer();
+}
+
+void BrushedMotor::setDutyCycle(int dc)
+{
+    if (dc <= MAX_ON_DUTY && dc != 0)
+    {
+        runDutyCycle = dc;
+        onDutyTime = runDutyCycle * (cycleDuration / 100);
+        Serial.println("calculating onDutyTime - " + String(onDutyTime));
+        offDutyTime = cycleDuration - onDutyTime;
+    }
+    else
+    {
+        runDutyCycle = 100;
+        onDutyTime = offDutyTime = 0; // disables interval timer
+    }
+    ti->updateInterval(dutyTimer, TimeInterval(onDutyTime));
+}
+
+int BrushedMotor::getDutyCycle() { return runDutyCycle; }
 
 void BrushedMotor::start()
 {
-    int pwm = int(255 * float(getCurrentSpeed() / 100.0));
-    Serial.println("Writing speed and direction: Current Speed: " + String(getCurrentSpeed()));
-    analogWrite(getMotorDir(), pwm);
+    resetTravelMon();
+    setControllerDirection();
+    cycleStart();
 }
 
-void BrushedMotor::start(byte speed)
+void BrushedMotor::cycleStart()
 {
-    setCurrentSpeed(speed);
-    start();
+    onDuty = true;
+    Serial.println("Cycle start - On duty time: " + String(onDutyTime));
+    ti->updateInterval(dutyTimer, TimeInterval(onDutyTime, millis()));
 }
 
-// Causes motor to stop but does not change programmed speed
+void BrushedMotor::run()
+{
+    setTravelLimitFlag(ti->intervalExpired(travelIntervalTimer));
+    if (onDuty)
+    {
+        int pwm = (255 * getMotorSpeed()) / 100;
+        Serial.println("Writing speed and direction: Current Speed: " + String(getMotorSpeed()));
+        analogWrite(dirPin, pwm);
+    }
+    if (ti->intervalExpired(dutyTimer))
+    {
+        Serial.println("Handling duty cycle..." + String(getDutyCycle()));
+        onDuty ? dcStop() : cycleStart();
+    }
+}
+
+// Stop function for duty cycle
+void BrushedMotor::dcStop()
+{
+    Serial.println("Motor dc-stopping...");
+    onDuty = false;
+    ti->updateInterval(dutyTimer, TimeInterval(offDutyTime, millis()));
+    stop();
+}
+
 void BrushedMotor::stop()
 {
-    Serial.println("Motor stopping...");
-    analogWrite(getMotorDir(), 0);
+    analogWrite(dirPin, 0);
+}
+
+void BrushedMotor::resetTravelTimer()
+{
+    setTravelLimitFlag(false);
+    ti->resetInterval(travelIntervalTimer);
 }
