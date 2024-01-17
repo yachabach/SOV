@@ -41,5 +41,4 @@ public:
     void start() override;
     void run() override;
     void stop() override;
-    void resetTravelTimer();
 };

@@ -40,7 +40,7 @@ void BrushedMotor::setTravelLimit(unsigned long newLimit)
 void BrushedMotor::resetTravelMon()
 {
     setTravelLimitFlag(false);
-    resetTravelTimer();
+    ti->resetInterval(travelIntervalTimer);
 }
 
 void BrushedMotor::setDutyCycle(int dc)
@@ -73,7 +73,7 @@ void BrushedMotor::cycleStart()
 {
     onDuty = true;
     Serial.println("Cycle start - On duty time: " + String(onDutyTime));
-    ti->updateInterval(dutyTimer, TimeInterval(onDutyTime, millis()));
+    ti->updateInterval(dutyTimer, TimeInterval(onDutyTime, millis(), false));
 }
 
 void BrushedMotor::run()
@@ -95,19 +95,13 @@ void BrushedMotor::run()
 // Stop function for duty cycle
 void BrushedMotor::dcStop()
 {
-    Serial.println("Motor dc-stopping...");
+    Serial.println("Motor dc-stopping...offDutyTime: " + String(offDutyTime));
     onDuty = false;
-    ti->updateInterval(dutyTimer, TimeInterval(offDutyTime, millis()));
+    ti->updateInterval(dutyTimer, TimeInterval(offDutyTime, millis(), false));
     stop();
 }
 
 void BrushedMotor::stop()
 {
     analogWrite(dirPin, 0);
-}
-
-void BrushedMotor::resetTravelTimer()
-{
-    setTravelLimitFlag(false);
-    ti->resetInterval(travelIntervalTimer);
 }

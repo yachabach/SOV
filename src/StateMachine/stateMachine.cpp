@@ -25,10 +25,6 @@ stateTransition transitions[]{
     // {LIMIT_REACHED, CRUISING, pause, PAUSED},
     // {LIMIT_REACHED, PAUSED, step_run, CRUISING},
 
-    // Cruise Error
-    {LIMIT_REACHED, CRUISING, stop, LOST},
-    {TRANSITION_COMPLETE, LOST, idle, STOPPED},
-
     // Stop Logic
     {SHORT_USER_PUSH, ANY, stop, STOPPED},
     {TRANSITION_COMPLETE, STOPPED, idle, STOPPED},

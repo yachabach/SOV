@@ -63,6 +63,7 @@ systemState pause(Motor &motor, systemState sys)
 
     if (ti->intervalExpired(pauseLimit))
     {
+        Serial.println("Pause for reverse complete...");
         newState.lastEvent = LIMIT_REACHED;
         newState.currentState = sys.endState;
     }

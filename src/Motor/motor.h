@@ -40,6 +40,7 @@ public:
     virtual void stop() = 0;
     virtual void resetTravelMon() = 0;
     virtual void setDutyCycle(int) = 0;
+    virtual int getDutyCycle() = 0;
 
     void reverse();
     void start(int); // Probably don't have to override
