@@ -44,7 +44,7 @@ int IntervalManager::makeInterval(TimeInterval newInterval)
 void IntervalManager::updateInterval(int i, TimeInterval t)
 {
     intervalList[i] = t;
-    Serial.println("Updated interval " + String(i) + " to interval: " + String(intervalList[i].interval));
+    Serial.println("Updated interval " + String(i) + " to: " + String(intervalList[i].interval) + "ms");
 }
 
 TimeInterval &IntervalManager::getInterval(int idx)
@@ -58,13 +58,12 @@ bool IntervalManager::intervalExpired(int intervalIndex)
 
     // Check for disabled timer
     if (!interval.interval)
-        return false;
+        return true;
 
     unsigned long diff = millis() - interval.startTime;
     // Reset timer only if expired and autoReset is true
     if (diff >= interval.interval)
     {
-        Serial.println("Start: " + String(interval.startTime) + "Diff: " + String(diff) + " interval: " + interval.interval);
         interval.startTime = interval.autoReset ? millis() : 0;
         return true;
     }
