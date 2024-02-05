@@ -2,7 +2,6 @@
 
 #include "motor.h"
 #include "brushedMotorConst.h"
-// #include "./InterruptTimerModule/systemTimers.h"
 
 class BrushedMotor : public Motor
 {
@@ -25,6 +24,7 @@ private:
     int runDutyCycle = 100; // 100 or < 30
     void cycleStart();
     void dcStop();
+    unsigned long calculateDutyInterval(int);
 
 public:
     BrushedMotor(

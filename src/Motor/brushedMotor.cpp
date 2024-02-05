@@ -20,8 +20,9 @@ void BrushedMotor::setPWMPins()
 void BrushedMotor::setTimersAndIntervals()
 {
     travelIntervalTimer = ti->makeInterval(TimeInterval(getTrvlLimit(), false));
-    dutyTimer = ti->makeInterval(TimeInterval({0, false}));
     cycleDuration = MIN_CYCLE_DURATION;
+    dutyTimer = ti->makeInterval(TimeInterval({0, false}));
+    setDutyCycle(runDutyCycle);
 }
 
 void BrushedMotor::setControllerDirection()
@@ -43,20 +44,24 @@ void BrushedMotor::resetTravelMon()
     ti->resetInterval(travelIntervalTimer);
 }
 
-void BrushedMotor::setDutyCycle(int dc)
+unsigned long BrushedMotor::calculateDutyInterval(int dc)
 {
+    Serial.println("Calculating dc interval with: " + String(dc));
     if (dc <= MAX_ON_DUTY && dc != 0)
-    {
-        runDutyCycle = dc;
-        onDutyTime = runDutyCycle * (cycleDuration / 100);
-        Serial.println("calculating onDutyTime - " + String(onDutyTime));
-        offDutyTime = cycleDuration - onDutyTime;
-    }
+        return dc * (cycleDuration / 100);
     else
     {
-        runDutyCycle = 100;
-        onDutyTime = offDutyTime = 0; // disables interval timer
+        Serial.println("Returning cycleDuration: " + String(cycleDuration));
+        return cycleDuration;
     }
+}
+
+void BrushedMotor::setDutyCycle(int dc)
+{
+    runDutyCycle = dc;
+    onDutyTime = calculateDutyInterval(runDutyCycle);
+    offDutyTime = cycleDuration - onDutyTime;
+    Serial.println("updated duty cycle - onDutyTime: " + String(onDutyTime));
     ti->updateInterval(dutyTimer, TimeInterval(onDutyTime));
 }
 
@@ -71,20 +76,21 @@ void BrushedMotor::start()
 
 void BrushedMotor::cycleStart()
 {
-    onDuty = true;
+    onDuty = onDutyTime != 0;
     Serial.println("Cycle start - On duty time: " + String(onDutyTime));
     ti->updateInterval(dutyTimer, TimeInterval(onDutyTime, millis(), false));
-}
-
-void BrushedMotor::run()
-{
-    setTravelLimitFlag(ti->intervalExpired(travelIntervalTimer));
     if (onDuty)
     {
         int pwm = (255 * getMotorSpeed()) / 100;
         Serial.println("Writing speed and direction: Current Speed: " + String(getMotorSpeed()));
         analogWrite(dirPin, pwm);
     }
+}
+
+void BrushedMotor::run()
+{
+    setTravelLimitFlag(ti->intervalExpired(travelIntervalTimer));
+
     if (ti->intervalExpired(dutyTimer))
     {
         Serial.println("Handling duty cycle..." + String(getDutyCycle()));

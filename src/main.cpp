@@ -7,7 +7,7 @@
 
 #define TICK_LED 13
 
-BrushedMotor sovMotor(CW, 100, 2000);
+BrushedMotor sovMotor(CW, 100, 30000);
 systemState currentState = {POWER_UP, START_UP, STOPPED};
 
 void setup()
