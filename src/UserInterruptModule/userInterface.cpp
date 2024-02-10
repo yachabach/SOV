@@ -28,21 +28,23 @@ void checkUserInput(Motor &motor)
     }
 
     // Check for a new speed
-    int newSpeed = analogRead(SPEED_PIN) / 4;
-    if (newSpeed != lastSpeed)
+    int newSpeed = analogRead(SPEED_PIN);
+    newSpeed = (newSpeed < 23) ? 0 : (newSpeed - 23) / 10;
+    int oldSpeed = motor.getMotorSpeed();
+    if (newSpeed >= oldSpeed + 2 || newSpeed <= oldSpeed - 2)
     {
-        Serial.println("Detected speed change - setting speed");
-        lastSpeed = newSpeed;
+        Serial.println("Detected speed change - setting speed: " + String(newSpeed));
+        Serial.println("motorSpeed: " + String(motor.getMotorSpeed()) + "; oldSpeed: " + String(oldSpeed) + "; newSpeed: " + String(newSpeed));
         motor.setMotorSpeed(newSpeed * motor.getMotorDir());
     }
 
     // Check for a new Duty Cycle
-    unsigned long sv = analogRead(DC_PIN);
-    if (sv != lastDc)
-    {
-        lastDc = sv;
-        int newDutyCycle = (sv * 100) / 1023;
-        motor.setDutyCycle(newDutyCycle);
-        Serial.println("Updated dutycyle to: " + String(newDutyCycle));
-    }
+    // unsigned long sv = analogRead(DC_PIN);
+    // if (sv != lastDc)
+    // {
+    //     lastDc = sv;
+    //     int newDutyCycle = (sv * 100) / 1023;
+    //     motor.setDutyCycle(newDutyCycle);
+    //     Serial.println("Updated dutycyle to: " + String(newDutyCycle));
+    // }
 }

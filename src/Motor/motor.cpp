@@ -2,7 +2,7 @@
 
 Motor::Motor(
     direction dir,
-    byte speed,
+    int speed,
     unsigned long limit) : motorDir(dir),
                            motorSpeed(speed),
                            trvlLimit(limit)

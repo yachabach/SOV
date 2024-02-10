@@ -71,7 +71,8 @@ void BrushedMotor::start()
 {
     resetTravelMon();
     setControllerDirection();
-    cycleStart();
+
+    // cycleStart();
 }
 
 void BrushedMotor::cycleStart()
@@ -90,12 +91,15 @@ void BrushedMotor::cycleStart()
 void BrushedMotor::run()
 {
     setTravelLimitFlag(ti->intervalExpired(travelIntervalTimer));
+    int pwm = (255 * getMotorSpeed()) / 100;
+    Serial.println("Writing speed and direction: Current Speed: " + String(getMotorSpeed()));
+    analogWrite(dirPin, pwm);
 
-    if (ti->intervalExpired(dutyTimer))
-    {
-        Serial.println("Handling duty cycle..." + String(getDutyCycle()));
-        onDuty ? dcStop() : cycleStart();
-    }
+    // if (ti->intervalExpired(dutyTimer))
+    // {
+    //     Serial.println("Handling duty cycle..." + String(getDutyCycle()));
+    //     onDuty ? dcStop() : cycleStart();
+    // }
 }
 
 // Stop function for duty cycle

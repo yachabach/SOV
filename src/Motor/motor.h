@@ -20,7 +20,7 @@ private:
 public:
     Motor(
         direction motorDir = CW,
-        byte motorSpeed = 0,
+        int motorSpeed = 0,
         unsigned long trvlLimit = 0);
     ~Motor();
 
