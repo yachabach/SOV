@@ -22,9 +22,7 @@ private:
     bool onDuty = false;
     int cycleDuration;
     int runDutyCycle = 100; // 100 or < 30
-    void cycleStart();
     void dcStop();
-    unsigned long calculateDutyInterval(int);
 
 public:
     BrushedMotor(
@@ -35,8 +33,6 @@ public:
 
     void setTravelLimit(unsigned long);
     void resetTravelMon() override;
-    void setDutyCycle(int);
-    int getDutyCycle();
 
     void start() override;
     void run() override;

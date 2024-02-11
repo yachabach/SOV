@@ -61,6 +61,7 @@ bool IntervalManager::intervalExpired(int intervalIndex)
         return true;
 
     unsigned long diff = millis() - interval.startTime;
+
     // Reset timer only if expired and autoReset is true
     if (diff >= interval.interval)
     {

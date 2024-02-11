@@ -30,7 +30,7 @@ void checkUserInput(Motor &motor)
     // Check for a new speed
     int newSpeed = analogRead(SPEED_PIN);
     newSpeed = (newSpeed < 23) ? 0 : (newSpeed - 23) / 10;
-    int oldSpeed = motor.getMotorSpeed();
+    int oldSpeed = motor.getMotorSpeed() * motor.getMotorDir();
     if (newSpeed >= oldSpeed + 2 || newSpeed <= oldSpeed - 2)
     {
         Serial.println("Detected speed change - setting speed: " + String(newSpeed));

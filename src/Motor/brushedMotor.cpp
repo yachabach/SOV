@@ -22,7 +22,6 @@ void BrushedMotor::setTimersAndIntervals()
     travelIntervalTimer = ti->makeInterval(TimeInterval(getTrvlLimit(), false));
     cycleDuration = MIN_CYCLE_DURATION;
     dutyTimer = ti->makeInterval(TimeInterval({0, false}));
-    setDutyCycle(runDutyCycle);
 }
 
 void BrushedMotor::setControllerDirection()
@@ -44,62 +43,17 @@ void BrushedMotor::resetTravelMon()
     ti->resetInterval(travelIntervalTimer);
 }
 
-unsigned long BrushedMotor::calculateDutyInterval(int dc)
-{
-    Serial.println("Calculating dc interval with: " + String(dc));
-    if (dc <= MAX_ON_DUTY && dc != 0)
-        return dc * (cycleDuration / 100);
-    else
-    {
-        Serial.println("Returning cycleDuration: " + String(cycleDuration));
-        return cycleDuration;
-    }
-}
-
-void BrushedMotor::setDutyCycle(int dc)
-{
-    runDutyCycle = dc;
-    onDutyTime = calculateDutyInterval(runDutyCycle);
-    offDutyTime = cycleDuration - onDutyTime;
-    Serial.println("updated duty cycle - onDutyTime: " + String(onDutyTime));
-    ti->updateInterval(dutyTimer, TimeInterval(onDutyTime));
-}
-
-int BrushedMotor::getDutyCycle() { return runDutyCycle; }
-
 void BrushedMotor::start()
 {
     resetTravelMon();
     setControllerDirection();
-
-    // cycleStart();
-}
-
-void BrushedMotor::cycleStart()
-{
-    onDuty = onDutyTime != 0;
-    Serial.println("Cycle start - On duty time: " + String(onDutyTime));
-    ti->updateInterval(dutyTimer, TimeInterval(onDutyTime, millis(), false));
-    if (onDuty)
-    {
-        int pwm = (255 * getMotorSpeed()) / 100;
-        Serial.println("Writing speed and direction: Current Speed: " + String(getMotorSpeed()));
-        analogWrite(dirPin, pwm);
-    }
 }
 
 void BrushedMotor::run()
 {
     setTravelLimitFlag(ti->intervalExpired(travelIntervalTimer));
-    int pwm = (255 * getMotorSpeed()) / 100;
-    Serial.println("Writing speed and direction: Current Speed: " + String(getMotorSpeed()));
+    int pwm = (255 * getMotorSpeed() * getMotorDir()) / 100;
     analogWrite(dirPin, pwm);
-
-    // if (ti->intervalExpired(dutyTimer))
-    // {
-    //     Serial.println("Handling duty cycle..." + String(getDutyCycle()));
-    //     onDuty ? dcStop() : cycleStart();
-    // }
 }
 
 // Stop function for duty cycle
